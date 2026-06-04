@@ -1,40 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Notice Board
 
-## Getting Started
+A responsive notice board built for the Reno Platforms web internship assignment.
 
-First, run the development server:
+## Stack
+
+- Next.js Pages Router
+- Prisma ORM
+- MySQL-compatible hosted database
+- Tailwind CSS
+
+## Features
+
+- Create, read, update, and delete notices end to end
+- Server-side validation inside API routes
+- Urgent notices ordered first in the database query
+- Delete confirmation before destructive actions
+- Responsive cards for phone and desktop
+- Optional notice image stored as a URL or uploaded data URL
+
+## Local Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create a `.env.local` file in the project root and set your hosted MySQL connection string. For TiDB Cloud, include `?sslaccept=strict`:
+
+```bash
+DATABASE_URL="mysql://USER:PASSWORD@HOST:PORT/DATABASE?sslaccept=strict"
+```
+
+3. Generate the Prisma client:
+
+```bash
+npm run db:generate
+```
+
+4. Push the schema to the database:
+
+```bash
+npm run db:push
+```
+
+5. Start the dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+- `npm run dev` - start the development server
+- `npm run build` - build for production
+- `npm run start` - start the production server
+- `npm run lint` - run ESLint
+- `npm run db:generate` - generate Prisma Client
+- `npm run db:push` - sync the schema to the database
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+## Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Deploy to Vercel and set the same `DATABASE_URL` environment variable in the project settings.
 
-## Learn More
+The app uses a hosted MySQL-compatible database so data persists across refreshes and redeploys.
 
-To learn more about Next.js, take a look at the following resources:
+## AI Usage
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+AI was used to scaffold the initial implementation, accelerate Prisma v7 configuration adjustments, and help draft the README. The CRUD logic, server-side validation, and UI decisions were reviewed and edited in this repository.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## One Improvement With More Time
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+Add authenticated moderation tools and a proper image upload flow backed by object storage instead of storing image data directly in the database.

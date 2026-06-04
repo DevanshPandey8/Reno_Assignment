@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Category {
+  Exam
+  Event
+  General
+}
+
+enum Priority {
+  Normal
+  Urgent
+}
+
+model Notice {
+  id          String    @id @default(cuid())
+  title       String
+  body        String    @db.LongText
+  category    Category
+  priority    Priority  @default(Normal)
+  publishDate DateTime  @db.Date
+  image       String?   @db.LongText
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([priority, publishDate])
+  @@index([createdAt])
+}

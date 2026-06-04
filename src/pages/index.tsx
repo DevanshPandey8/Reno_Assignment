@@ -1,78 +1,139 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
+import Head from "next/head";
+import Link from "next/link";
+import { useState } from "react";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+import NoticeCard from "@/components/NoticeCard";
+import { prisma } from "@/lib/prisma";
+import { serializeNotices, type SerializedNotice } from "@/lib/notices";
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+type HomePageProps = {
+  notices: SerializedNotice[];
+};
 
-export default function Home() {
+export const getServerSideProps: GetServerSideProps<HomePageProps> = async () => {
+  const notices = await prisma.notice.findMany({
+    orderBy: [{ priority: "desc" }, { publishDate: "desc" }, { createdAt: "desc" }],
+  });
+
+  return {
+    props: {
+      notices: serializeNotices(notices),
+    },
+  };
+};
+
+export default function Home({ notices: initialNotices }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const [notices, setNotices] = useState(initialNotices);
+
+  const handleDelete = async (noticeId: string) => {
+    try {
+      const shouldDelete = window.confirm("Delete this notice? This action cannot be undone.");
+
+      if (!shouldDelete) {
+        return;
+      }
+
+      const response = await fetch(`/api/notices/${noticeId}`, {
+        method: "DELETE",
+      });
+
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok && response.status !== 204) {
+        throw new Error(payload?.error ?? "Unable to delete the notice.");
+      }
+
+      setNotices((current) => current.filter((notice) => notice.id !== noticeId));
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Unable to delete the notice.");
+    }
+  };
+
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black`}
-    >
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <>
+      <Head>
+        <title>Notice Board</title>
+        <meta
+          name="description"
+          content="A responsive notice board with full CRUD operations built for the Reno internship assignment."
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the index.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+      </Head>
+
+      <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/8 px-6 py-8 shadow-[0_40px_120px_rgba(15,23,42,0.4)] backdrop-blur-2xl sm:px-8 lg:px-10">
+          <div className="grid gap-8 lg:grid-cols-[1.4fr_0.9fr] lg:items-end">
+            <div className="space-y-5">
+              <p className="text-sm uppercase tracking-[0.4em] text-orange-200/80">Reno Platforms assignment</p>
+              <div className="space-y-4">
+                <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-slate-50 sm:text-5xl lg:text-6xl">
+                  Notice Board with database-backed CRUD, urgent-first ordering, and a polished operator view.
+                </h1>
+                <p className="max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+                  Create, edit, and delete notices through API routes, persist them with Prisma and MySQL, and keep urgent items visible above normal ones.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="rounded-3xl border border-white/10 bg-slate-950/55 p-5 text-center">
+                <p className="text-3xl font-semibold text-slate-50">{notices.length}</p>
+                <p className="mt-1 text-sm text-slate-300">Active notices</p>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-slate-950/55 p-5 text-center">
+                <p className="text-3xl font-semibold text-slate-50">API</p>
+                <p className="mt-1 text-sm text-slate-300">Server validation</p>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-slate-950/55 p-5 text-center">
+                <p className="text-3xl font-semibold text-slate-50">MySQL</p>
+                <p className="mt-1 text-sm text-slate-300">Persistent storage</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link
+              href="/notices/new"
+              className="rounded-full bg-gradient-to-r from-orange-500 to-rose-500 px-5 py-3 text-sm font-semibold text-white transition hover:scale-[1.01]"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs/pages/getting-started?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+              Create notice
+            </Link>
+            <span className="rounded-full border border-white/10 bg-slate-950/50 px-4 py-2 text-sm text-slate-300">
+              Urgent notices are ordered first in the database query.
+            </span>
+          </div>
+        </section>
+
+        <section className="mt-8">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-semibold text-slate-50">All notices</h2>
+              <p className="mt-1 text-sm text-slate-300">Responsive cards with edit and delete actions.</p>
+            </div>
+          </div>
+
+          {notices.length ? (
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {notices.map((notice) => (
+                <NoticeCard key={notice.id} notice={notice} onDelete={handleDelete} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-[2rem] border border-dashed border-white/15 bg-slate-950/40 px-6 py-12 text-center">
+              <h3 className="text-xl font-semibold text-slate-50">No notices yet</h3>
+              <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-300">
+                Create the first notice to verify the end-to-end CRUD flow and the urgent-first ordering.
+              </p>
+              <Link
+                href="/notices/new"
+                className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-orange-100"
+              >
+                Add notice
+              </Link>
+            </div>
+          )}
+        </section>
       </main>
-    </div>
+    </>
   );
 }
